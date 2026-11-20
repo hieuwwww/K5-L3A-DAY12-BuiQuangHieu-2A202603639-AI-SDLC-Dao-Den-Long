@@ -1,0 +1,3 @@
+import {createServer} from 'node:http';import {readFile,stat} from 'node:fs/promises';import {extname,join,normalize} from 'node:path';
+const root=process.cwd(),types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json'};
+createServer(async(req,res)=>{try{let path=normalize(decodeURIComponent((req.url??'/').split('?')[0]));if(path==='/')path='/index.html';const file=join(root,path);if(!file.startsWith(root))throw Error('bad path');const info=await stat(file);if(!info.isFile())throw Error('not file');res.setHeader('Content-Type',types[extname(file)]??'application/octet-stream');res.end(await readFile(file));}catch{res.statusCode=404;res.end('Not found');}}).listen(4173,()=>console.log('Game at http://localhost:4173'));
