@@ -2,3 +2,5 @@ node_modules/
 dist/
 .superpowers/
 *.log
+leaderboard.local.json
+dist/

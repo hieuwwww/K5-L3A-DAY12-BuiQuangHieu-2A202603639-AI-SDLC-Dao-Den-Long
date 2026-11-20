@@ -31,3 +31,8 @@ test('browser hint selects exact eligible lamp when rounded fuel still displays 
  assert.equal(formatLanternHint(s,2,[{id:'L1',lit:true,fuel_ticks:5999},{id:'L2',lit:false,fuel_ticks:0}]),'E — Châm dầu đèn ~100/100 · Đang mang 1/10');
  assert.equal(formatLanternHint(s,2,[{id:'L1',lit:true,fuel_ticks:6000},{id:'L2',lit:false,fuel_ticks:0}]),'E — Đèn 0/10 · Đang mang 1/10');
 });
+test('recordable result occurs only after a lost night or winning final night',()=>{
+ assert.equal(ui.shouldOfferScore?.({state:'won'},1),false);
+ assert.equal(ui.shouldOfferScore?.({state:'won'},3),true);
+ assert.equal(ui.shouldOfferScore?.({state:'lost'},2),true);
+});

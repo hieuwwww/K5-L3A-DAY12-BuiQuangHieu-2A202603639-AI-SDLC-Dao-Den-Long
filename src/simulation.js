@@ -29,7 +29,7 @@ function validShadePoint(g){
  return null;
 }
 
-export function createGame({seed=1,night=1,config=DEFAULT_CONFIG,scenario={}}={}){
+export function createGame({seed=1,night=1,config=DEFAULT_CONFIG,scenario={},benchmarkMode=false}={}){
  const map=getNightMap(night),nightConfig=NIGHT_CONFIGS[night],rng=createRng(seed);
   const lanterns=map.lanterns.map(l=>({...clone(l),lit:false,deposited:0,fuel_ticks:0,ever_lit:false,relit_count:0}));
    for(const patch of scenario.lanterns??[]){const l=lanterns.find(x=>x.id===patch.id);if(l){if(patch.pos)l.pos=clone(patch.pos);if(patch.lit!==undefined)l.lit=patch.lit;if(patch.deposited!==undefined)l.deposited=patch.deposited;l.ever_lit=patch.ever_lit??l.lit;l.relit_count=patch.relit_count??0;l.fuel_ticks=l.lit?Math.min(config.fuel_max*60,Math.max(0,Math.round((patch.fuel??config.fuel_max)*60))):0;}}
@@ -40,7 +40,7 @@ export function createGame({seed=1,night=1,config=DEFAULT_CONFIG,scenario={}}={}
  const playerScenario=scenario.player??{};
   const player={pos:clone(playerScenario.pos??[0,0,0]),vel:clone(playerScenario.vel??[0,0,0]),facing:clone(playerScenario.facing??[0,0,1]),grounded:true,carried:playerScenario.carried??0,successful_lights:playerScenario.successful_lights??0,flames:playerScenario.flames??config.flames,invuln:playerScenario.invuln_ticks??0,dashCd:playerScenario.dash_cd_ticks??0,pulseCd:playerScenario.pulse_cd_ticks??0,charm:playerScenario.charm_ticks??0,dashTicks:0,pulsePushTicks:0,fallTicks:0,spawnPos:[0,0,0],jumpHeld:false};
  const ticks=Math.round((scenario.time_left_s??nightConfig.duration_s)*60);
- const g={seed,night,config,map,nightConfig,rng,tick:0,sim_tick:0,timeLeftTicks:ticks,totalScore:scenario.total_score??0,score:0,state:'playing',result:null,reason:null,player,lanterns,motes,shades,drifters,charms,wind:{active:false,dir_deg:0},windTicks:0,windWarning:false,randomMotes:scenario.random_motes??true,randomShades:scenario.random_shades??true,randomDrifters:scenario.random_drifters??true,windEnabled:scenario.wind_enabled??night===3,spawnCursor:0,shadeCursor:0,nextMoteId:motes.length,nextShadeId:shades.reduce((n,s)=>Math.max(n,Number(s.id.slice(1))||0),0),nextDrifterId:drifters.length,previous:{jump:false,dash:false,pulse:false,interact:false,pause:false},paused:false,spawnedShadeCount:shades.length,spawnedDrifterCount:drifters.length};
+  const g={seed,night,config,map,nightConfig,rng,benchmarkMode,tick:0,sim_tick:0,timeLeftTicks:ticks,totalScore:scenario.total_score??0,score:0,state:'playing',result:null,reason:null,player,lanterns,motes,shades,drifters,charms,wind:{active:false,dir_deg:0},windTicks:0,windWarning:false,randomMotes:scenario.random_motes??true,randomShades:scenario.random_shades??true,randomDrifters:scenario.random_drifters??true,windEnabled:scenario.wind_enabled??night===3,spawnCursor:0,shadeCursor:0,nextMoteId:motes.length,nextShadeId:shades.reduce((n,s)=>Math.max(n,Number(s.id.slice(1))||0),0),nextDrifterId:drifters.length,previous:{jump:false,dash:false,pulse:false,interact:false,pause:false},paused:false,spawnedShadeCount:shades.length,spawnedDrifterCount:drifters.length};
  if(g.randomMotes)spawnMotes(g,Math.max(0,config.initial_motes-motes.length));
  if(g.randomShades&&night===1&&shades.length===0){/* scheduled spawn begins at sim_tick 300 */}
  return g;
@@ -143,8 +143,9 @@ export function stepGame(g,input={}){
  if(edge(g,'pause',input)){g.paused=!g.paused;at(g.paused?'paused':'resumed',{});g.previous.pause=Boolean(input.pause);return events;}
  g.previous.pause=Boolean(input.pause);
  if(g.paused)return events;
- if(g.state!=='playing')return events;
- g.sim_tick++;g.timeLeftTicks=Math.max(0,g.timeLeftTicks-1);
+  if(g.state!=='playing')return events;
+  if(g.benchmarkMode){g.sim_tick++;updateShades(g,at);return events;}
+  g.sim_tick++;g.timeLeftTicks=Math.max(0,g.timeLeftTicks-1);
  const p=g.player,c=g.config;
  const dashInput=edge(g,'dash',input),pulseInput=edge(g,'pulse',input);
  for(const key of ['invuln','dashCd','pulseCd','charm'])if(p[key]>0)p[key]--;

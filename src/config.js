@@ -24,7 +24,8 @@ export const NIGHT_CONFIGS = Object.freeze({
 });
 
 export function validateContract(contract) {
-  if (!contract || contract.contract_version !== '1.2' || !contract.tuning) throw new Error('contract_version/tuning invalid');
+  if (!contract || contract.contract_version !== '1.3' || !contract.tuning) throw new Error('contract_version/tuning invalid');
+  for(const key of ['bench_cmd','soak_cmd'])if(typeof contract[key]!=='string'||!contract[key].trim())throw new Error(`${key} must be nonempty`);
   const tuning = contract.tuning;
   for (const [key, expected] of Object.entries(DEFAULT_CONFIG)) {
     if (key === 'score') {

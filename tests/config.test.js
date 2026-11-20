@@ -3,9 +3,11 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { DEFAULT_CONFIG, NIGHT_CONFIGS, validateContract } from '../src/config.js';
 
-test('Phase 3 replaces v1.1 durations, score and contract with v1.2 normalized tuning', async () => {
+test('Phase 4 keeps v1.2 gameplay tuning in the v1.3 release contract', async () => {
   const contract = JSON.parse(await readFile(new URL('../game.contract.json', import.meta.url)));
-  assert.equal(contract.contract_version, '1.2');
+  assert.equal(contract.contract_version, '1.3');
+  assert.equal(contract.bench_cmd, 'node scripts/bench-web.js');
+  assert.equal(contract.soak_cmd, 'node scripts/soak.js');
   assert.equal(contract.tuning.dash_speed, 14);
   assert.equal(contract.tuning.dash_duration_s, 0.2);
   assert.equal(contract.tuning.dash_cooldown_s, 1.5);
@@ -28,7 +30,11 @@ test('Phase 3 replaces v1.1 durations, score and contract with v1.2 normalized t
 });
 
 test('contract validator rejects invalid tuning', () => {
-  assert.throws(() => validateContract({contract_version:'1.2', tuning:{...DEFAULT_CONFIG, player_speed:-1}}), /player_speed/);
+  const commands={bench_cmd:'node scripts/bench-web.js',soak_cmd:'node scripts/soak.js'};
+  assert.throws(() => validateContract({contract_version:'1.3', ...commands, tuning:{...DEFAULT_CONFIG, player_speed:-1}}), /player_speed/);
   assert.throws(() => validateContract({contract_version:'1.1', tuning:DEFAULT_CONFIG}), /contract_version/);
-  assert.throws(() => validateContract({contract_version:'1.2', tuning:{...DEFAULT_CONFIG, fuel_max:99}}), /fuel_max/);
+  assert.throws(() => validateContract({contract_version:'1.2', ...commands, tuning:DEFAULT_CONFIG}), /contract_version/);
+  assert.throws(() => validateContract({contract_version:'1.3', ...commands, tuning:{...DEFAULT_CONFIG, fuel_max:99}}), /fuel_max/);
+  for (const key of ['bench_cmd','soak_cmd']) for (const invalid of [undefined,'',3])
+    assert.throws(() => validateContract({contract_version:'1.3', ...commands, [key]:invalid, tuning:DEFAULT_CONFIG}), new RegExp(key));
 });
