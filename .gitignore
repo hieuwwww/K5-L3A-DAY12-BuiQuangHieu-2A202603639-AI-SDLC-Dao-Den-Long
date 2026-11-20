@@ -1,0 +1,5 @@
+node_modules/
+.superpowers/
+*.log
+leaderboard.local.json
+dist/

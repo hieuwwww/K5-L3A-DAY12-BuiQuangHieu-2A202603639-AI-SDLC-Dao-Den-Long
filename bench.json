@@ -1,0 +1,20 @@
+{
+  "contract_version": "1.3",
+  "frames": 1561,
+  "avg_fps": 52.090633029665966,
+  "p1_low_fps": 24.718059632318024,
+  "frame_ms_p95": 27.900000000001455,
+  "load_ms": 829.099853515625,
+  "peak_mem_mb": null,
+  "vsync_off": false,
+  "renderer": "Three.js r170 / WebKit WebGL",
+  "os": "linux 7.0.0-43-generic",
+  "scene": {
+    "shades": 200,
+    "motes": 100
+  },
+  "viewport": [
+    1280,
+    720
+  ]
+}

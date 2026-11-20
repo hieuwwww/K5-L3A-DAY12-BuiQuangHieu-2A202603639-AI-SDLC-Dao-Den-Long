@@ -1,0 +1,5 @@
+import {DEFAULT_KEYMAP,validateKeymap} from './keymap.js';
+const DEFAULTS={volume:.35,sensitivity:1,distinguishablePalette:false,reducedMotion:false,largeText:false,keymap:DEFAULT_KEYMAP};
+const normalized=data=>{let keymap;try{keymap=validateKeymap(data?.keymap??DEFAULT_KEYMAP);}catch{keymap={...DEFAULT_KEYMAP};}return {volume:Number.isFinite(data?.volume)?Math.max(0,Math.min(1,data.volume)):DEFAULTS.volume,sensitivity:Number.isFinite(data?.sensitivity)?Math.max(.2,Math.min(3,data.sensitivity)):DEFAULTS.sensitivity,distinguishablePalette:data?.distinguishablePalette===true,reducedMotion:data?.reducedMotion===true,largeText:data?.largeText===true,keymap};};
+export function loadSettings(storage){try{return normalized(JSON.parse(storage?.getItem('dao-settings')??'null'));}catch{return normalized(null);}}
+export function saveSettings(storage,settings){const value=normalized({...settings,volume:Math.max(0,Math.min(1,Number(settings.volume)||0)),sensitivity:Math.max(.2,Math.min(3,Number(settings.sensitivity)||1))});try{storage?.setItem('dao-settings',JSON.stringify(value));}catch{}return value;}
