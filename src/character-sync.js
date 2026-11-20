@@ -8,7 +8,7 @@ export function disposeCharacter(group){
  });
 }
 
-export function syncCharacters(world,cache,entries,kind){
+export function syncCharacters(world,cache,entries,kind,accent){
  const active=new Set(entries.map(entry=>entry.id));
  for(const [id,group] of cache)if(!active.has(id)){
   world.remove(group);disposeCharacter(group);cache.delete(id);
@@ -16,7 +16,7 @@ export function syncCharacters(world,cache,entries,kind){
  for(const entry of entries){
   let group=cache.get(entry.id);
   if(!group){group=createCharacter(kind);world.add(group);cache.set(entry.id,group);}
-  group.position.set(...entry.pos);updateCharacter(group,entry.state);
+  group.position.set(...entry.pos);updateCharacter(group,entry.state,accent);
  }
 }
 

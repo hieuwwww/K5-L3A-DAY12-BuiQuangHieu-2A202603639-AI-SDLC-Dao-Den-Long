@@ -4,7 +4,7 @@ import {extname,resolve,relative,isAbsolute} from 'node:path';
 
 const root=resolve(process.cwd());
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8'};
-const allowed=new Set(['/index.html','/src/style.css','/src/browser.js','/src/simulation.js','/src/config.js','/src/maps.js','/src/rng.js','/src/ui.js','/src/settings.js','/src/audio.js','/src/actor-visual.js','/src/characters.js','/src/character-sync.js','/src/pause-flow.js','/node_modules/three/build/three.module.js']);
+const allowed=new Set(['/index.html','/src/style.css','/src/browser.js','/src/simulation.js','/src/config.js','/src/maps.js','/src/rng.js','/src/ui.js','/src/settings.js','/src/audio.js','/src/actor-visual.js','/src/characters.js','/src/character-sync.js','/src/pause-flow.js','/src/lantern-visual.js','/node_modules/three/build/three.module.js']);
 
 createServer(async(req,res)=>{
   try {

@@ -6,6 +6,8 @@ After rendering update: `.playwright-mcp/page-2026-11-20T09-09-09-332Z.png` show
 
 Cute-character pass (1280×720): `.playwright-mcp/page-2026-11-20T09-20-55-909Z.png` shows Mây's larger luminous circular eyes in the live game; `.playwright-mcp/page-2026-11-20T09-22-00-141Z.png` shows all three character meshes rendered together using the browser's character factory, including distinct purple Bóng Mực and teal Gió Lạc. The latter is a temporary browser evaluation preview, not a claim that both enemies spawned naturally in the captured night. Their creation, state changes, cleanup and heading are covered by unit tests. Dash and natural enemy spawn were not visually recorded; the momentary FPS label was 60, not a measured 60-second average.
 
+Phase 3 browser smoke (1280×720): `.playwright-mcp/page-2026-11-20T09-49-21-757Z.png` shows night-one timer starting at 04:00, active-lantern target “Bình minh ≥3” and carried/capacity 0/10; screenshot captured around 03:48. Console errors: 0. Off lamps show reduced paper, a triangular tear, but the far-away poles are tiny; a naturally lit/low-fuel/refuel lamp and the palette setting after reload were not captured in this pass. Node tests cover blink, tear and persistence; no 60-second FPS measurement was taken.
+
 - [ ] Main menu → night intro → play each night → result → next night / final dawn.
 - [ ] Lose and replay the same night.
 - [ ] Pause/resume/replay/settings/menu; verify simulation timer stays frozen.

@@ -78,3 +78,6 @@ Keep `src/simulation.js` as the sole owner of gameplay transitions. Extract immu
 - `tick` is wall simulation frame count; `sim_tick` advances only when unpaused. Spawn schedules and TTLs use `sim_tick`.
 - Browser-only extras must be disabled in headless and must not influence seeded RNG draws used by simulation.
 - The source ticket does not fully prescribe collision geometry for dropped motes, wall collision details, drifter pulse target height, ramp interpolation, or exact audio assets. Use deterministic simple geometry/synthesized Web Audio and pin the selected behaviors in tests and this document.
+# Phase 3 supersession notice
+
+Ticket-03 replaces Ticket-02's permanent lit lantern, immediate all-lit victory, earlier night durations and scoring rules. See `docs/superpowers/specs/2026-11-20-ticket-03-oil-lanterns-design.md`, `docs/adr/2026-11-20-oil-lanterns-and-dawn.md`, and `CHANGELOG.md`. All other Ticket-02 rules remain in force.

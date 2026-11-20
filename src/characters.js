@@ -34,11 +34,14 @@ export function createCharacter(kind){
  return group;
 }
 
-export function updateCharacter(group,state){
+export function updateCharacter(group,state,shadeEyeColor='#7A3CFF'){
  const body=group.children.find(child=>child.userData.role==='body');
  if(!body)return;
  const kind=group.userData.kind;
  body.material.color.set(kind==='shade'?(state==='stunned'?'#9481ba':'#48355f'):kind==='drifter'?(state==='flee'?'#8dced1':'#5c9db0'):'#f2dbb6');
+ if(kind==='shade')for(const eye of group.children.filter(child=>child.userData.role==='eye')){
+  eye.material.color.set(shadeEyeColor);eye.material.emissive.set(shadeEyeColor);
+ }
  if(kind==='drifter')for(const eye of group.children.filter(child=>child.userData.role==='eye')){
   eye.material.color.set(state==='chase'?'#ffd59b':'#f4ffff');
   eye.material.emissive.set(state==='chase'?'#ffd59b':'#f4ffff');

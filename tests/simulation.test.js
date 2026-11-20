@@ -18,11 +18,11 @@ test('movement is camera relative and diagonal normalized', () => {
   assert.ok(Math.abs(p[2]-0.308)<0.002);
 });
 
-test('pickup and deposit light a lantern and award defined score', () => {
+test('Phase 3 deposit lights a lantern but does not end the night early', () => {
   const g=game({random_motes:false,random_shades:false,motes:[],shades:[],lanterns:[{id:'L1',pos:[0,0,0],deposited:0},{id:'L2',lit:true},{id:'L3',lit:true},{id:'L4',lit:true},{id:'L5',lit:true}],player:{pos:[0,0,0],carried:10,flames:3}});
   assert.deepEqual(stepGame(g,{}).map(e=>e.name),[]);
-  assert.deepEqual(stepGame(g,{interact:true}).map(e=>e.name),['deposit','lantern_lit','game_over']);
-  assert.equal(snapshot(g).state,'won');
+   assert.deepEqual(stepGame(g,{interact:true}).map(e=>e.name),['deposit','lantern_lit']);
+   assert.equal(snapshot(g).state,'playing');assert.equal(g.score,150);
 });
 
 test('scenario pre-lit lanterns do not award score or events', () => {

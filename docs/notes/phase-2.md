@@ -12,6 +12,3 @@ Ticket-02 supersedes Phase 1 gameplay tuning. The authoritative standards and fu
 - This implementation has not yet verified a complete three-night victory path.
 - The visual map renderer remains simplified; several simulation systems need more exact boundary tests and visual representations.
 - No true 60-second browser FPS average or complete gameplay audio audit has been recorded.
-# Provenance
-
-Phase 2 is a reconstruction from an OpenCode workspace snapshot; its newly created commit/tag does not assert the original completion time.
