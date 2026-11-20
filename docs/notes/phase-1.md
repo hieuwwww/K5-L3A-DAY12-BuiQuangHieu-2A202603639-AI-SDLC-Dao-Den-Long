@@ -1,7 +1,5 @@
 # Phase 1 — giả định và nhật ký
 
-> Bản phase này được tái dựng ngày 20/11/2026 từ snapshot OpenCode; commit/tag mới không phải mốc hoàn thành gốc.
-
 ## Giả định
 
 Các giá trị contract là lựa chọn cân bằng cho bản đầu: tốc độ 6 m/s; đom đóm 5/đèn; chứa tối đa 5; tương tác 2.5 m; pulse bán kính 5 m; đêm 300 giây; 3 lửa. Mất một lần chạm trừ một lửa; rơi ceil(50%) số đom đóm; invulnerability 1.5 giây. Điểm theo README và `game.contract.json`. `fall_enabled=false`, nên không có rơi khỏi đảo/hit fall.

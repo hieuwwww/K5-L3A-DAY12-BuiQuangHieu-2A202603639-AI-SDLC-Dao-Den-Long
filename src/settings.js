@@ -1,0 +1,3 @@
+const DEFAULTS={volume:.35,sensitivity:1};
+export function loadSettings(storage){try{const data=JSON.parse(storage?.getItem('dao-settings')??'null');if(!data||typeof data!=='object')return {...DEFAULTS};return {volume:Number.isFinite(data.volume)?Math.max(0,Math.min(1,data.volume)):DEFAULTS.volume,sensitivity:Number.isFinite(data.sensitivity)?Math.max(.2,Math.min(3,data.sensitivity)):DEFAULTS.sensitivity};}catch{return {...DEFAULTS};}}
+export function saveSettings(storage,settings){const value={volume:Math.max(0,Math.min(1,Number(settings.volume)||0)),sensitivity:Math.max(.2,Math.min(3,Number(settings.sensitivity)||1))};try{storage?.setItem('dao-settings',JSON.stringify(value));}catch{}return value;}

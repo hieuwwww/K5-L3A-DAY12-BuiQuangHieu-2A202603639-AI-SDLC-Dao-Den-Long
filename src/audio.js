@@ -1,0 +1,6 @@
+export class AudioSystem{
+ constructor(volume=.35){this.volume=volume;this.context=null;this.master=null;this.osc=null;}
+ start(){if(!globalThis.AudioContext)return;this.context??=new AudioContext();if(this.context.state==='suspended')this.context.resume();if(!this.master){this.master=this.context.createGain();this.master.gain.value=this.volume;this.master.connect(this.context.destination);this.osc=this.context.createOscillator();const gain=this.context.createGain();gain.gain.value=.025;this.osc.type='sine';this.osc.frequency.value=110;this.osc.connect(gain);gain.connect(this.master);this.osc.start();}}
+ setVolume(value){this.volume=value;if(this.master)this.master.gain.value=value;}
+ handle(event){if(!this.context||!this.master)return;const notes={mote_picked:660,lantern_lit:880,pulse:220,player_hit:120,jump:440,dash:330,game_over:550,shade_spawn:180,charm_picked:740};const frequency=notes[event.name];if(!frequency)return;const osc=this.context.createOscillator(),gain=this.context.createGain();osc.frequency.value=frequency;gain.gain.value=.08;osc.connect(gain);gain.connect(this.master);osc.start();gain.gain.exponentialRampToValueAtTime(.001,this.context.currentTime+.18);osc.stop(this.context.currentTime+.2);}
+}

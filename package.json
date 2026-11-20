@@ -3,6 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "scripts": { "test": "node --test", "verify": "node scripts/verify.js", "start": "node scripts/serve.js" },
+  "scripts": { "test": "node --test", "verify": "node scripts/verify.js", "start": "node scripts/serve.js", "benchmark": "node scripts/benchmark.js" },
   "dependencies": { "three": "^0.170.0" }
 }

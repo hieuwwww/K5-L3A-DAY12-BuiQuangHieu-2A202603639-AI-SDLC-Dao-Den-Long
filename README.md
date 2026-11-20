@@ -1,6 +1,6 @@
-# Đảo Đèn Lồng — Phase 1
+# Đảo Đèn Lồng — Phase 2: Ba hòn đảo
 
-Game 3D góc nhìn thứ ba: Mây nhặt đom đóm và nạp năm Đèn Lồng Lớn để xua bóng đêm. Thắng khi thắp đủ năm đèn; thua khi hết lửa hoặc bình minh đến.
+Game 3D góc nhìn thứ ba với ba đêm: Đảo Bến, Đảo Cau và Đảo Chuông. Mây nhặt đom đóm, nạp đèn, lướt và tỏa sáng để vượt qua Bóng Mực cùng Gió Lạc.
 
 ## Chạy game
 
@@ -12,36 +12,33 @@ npm start
 Mở http://localhost:4173. (Sau khi clone: hai lệnh cài và chạy.)
 
 ## Điều khiển
-- WASD: di chuyển · Space: nhảy · E: nạp đom đóm vào đèn gần nhất · F: tỏa sáng · R: chơi lại sau khi kết thúc.
-- Giữ F chỉ kích hoạt một lần đến khi nhả và bấm lại.
+- WASD: di chuyển · Space: nhảy · Shift: lướt · E: nạp đom đóm · F: tỏa sáng · Esc/P: tạm dừng.
 
 ## Điểm
-- +10 mỗi đom đóm nhặt hoặc nạp; +50 mỗi đèn thắp (nạp đom đóm không làm mất điểm).
-- +5 mỗi Bóng Mực bị choáng; +1 mỗi giây còn lại khi thắng; +20 mỗi lửa còn lại khi thắng.
+- Điểm được cộng khi nạp đom đóm, thắp đèn, trúng pulse và thắng đêm; tổng điểm giữ qua các đêm thắng.
 
-## Headless Test Contract v1.0
+## Headless Test Contract v1.1
 
 ```bash
 node src/headless.js --seed 1 --night 1 --ticks 600 --out /tmp/game.jsonl
 npm test
 npm run verify
+npm run benchmark
 ```
 
-Tuning chính xác nằm trong `game.contract.json`. Mô phỏng chạy 60 tick/giây, seed giống nhau cho JSONL giống hệt nhau. Có thể truyền `--scenario file.json --inputs file.json`; snapshots mặc định mỗi 10 tick.
+Tuning/map nằm trong `game.contract.json` và `src/maps.js`. Mô phỏng chạy 60 tick/giây, seed + scenario + inputs giống nhau cho JSONL giống hệt nhau. `--night` nhận 1, 2 hoặc 3; snapshots mặc định mỗi 10 tick. Pause giữ `sim_tick` và thời gian mô phỏng.
 
-## Giả định Phase 1
+## Số liệu chuẩn
 
-- Mỗi đèn cần 5 đom đóm; sức chứa là 5. Đêm kéo dài 300 giây.
-- Mây có 3 lửa; pulse tiêu hao 1 lửa và có hồi chiêu 1 giây. Bóng Mực chạm Mây sẽ làm mất 1 lửa; rơi đom đóm bằng làm tròn lên một nửa số đang mang.
-- Nhân vật/đảo dùng hình khối thủ tục, không dùng asset bên ngoài. Khoảng cách gameplay đo trên mặt phẳng XZ theo contract.
-- Một vài trường contract (fall) chưa có cơ chế tương ứng; xem tuning và notes.
+Tốc độ chạy 6 m/s, lướt 14 m/s trong 0.2 s, sức chứa 10, mỗi đèn cần 10 đom đóm; Đêm 1/2/3 kéo dài 300/330/360 giây. Toàn bộ tuning v1.1 xem trong `game.contract.json`.
 
 ## Sáng tạo của tôi
 
-Ánh sáng đom đóm bay lơ lửng, đèn màu vàng cam và sương xanh tím tạo tương phản ấm/lạnh; tất cả chỉ ở renderer, không thay đổi kết quả headless. Bằng chứng hồi quy: `npm test` và `npm run verify`.
+Tạo hình nhân vật và hiệu ứng ánh sáng thủ tục theo bảng màu chuẩn; âm thanh tổng hợp chạy ở browser. Renderer/audio/settings không thay đổi kết quả headless.
 
 ## Bằng chứng và ghi chép
 
-- Kiểm tra phase: `docs/proof/phase-1.md`
-- Giả định/nhật ký AI/retro: `docs/notes/phase-1.md`
+- Kiểm tra Phase 1: `docs/proof/phase-1.md`
+- Acceptance criteria Ticket-02: `docs/superpowers/specs/2026-11-20-ticket-02-three-islands.md`
+- Checklist browser: `tests/browser-smoke.md`
 - Nguồn và giấy phép: `CREDITS.md`, `LICENSE`.

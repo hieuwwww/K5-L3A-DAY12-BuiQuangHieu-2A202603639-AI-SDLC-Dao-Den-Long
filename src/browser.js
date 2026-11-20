@@ -1,29 +1,47 @@
 import * as THREE from 'three';
 import {createGame,stepGame,snapshot} from './simulation.js';
 import {DEFAULT_CONFIG} from './config.js';
+import {MAPS} from './maps.js';
+import {loadSettings,saveSettings} from './settings.js';
+import {AudioSystem} from './audio.js';
+import {createUI} from './ui.js';
+import {facingYaw} from './actor-visual.js';
+import {createCharacter} from './characters.js';
+import {syncCharacters,clearCharacters} from './character-sync.js';
+import {resumePausedGame} from './pause-flow.js';
 
-const mount=document.querySelector('#game'),stats=document.querySelector('#stats'),message=document.querySelector('#message');
-const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;mount.append(renderer.domElement);
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x11172b);scene.fog=new THREE.FogExp2(0x11172b,.012);
+const root=document.querySelector('#game'),renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.3;root.append(renderer.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color('#18283e');scene.fog=new THREE.FogExp2('#243847',.004);
 const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,300);
-scene.add(new THREE.HemisphereLight(0x8294c4,0x221a2a,2));const moon=new THREE.DirectionalLight(0xc3d5ff,2.2);moon.position.set(-15,30,12);scene.add(moon);
-const ground=new THREE.Mesh(new THREE.CircleGeometry(24,64),new THREE.MeshStandardMaterial({color:0x28364c,roughness:.95}));ground.rotation.x=-Math.PI/2;ground.position.y=-.12;scene.add(ground);
-const sea=new THREE.Mesh(new THREE.CircleGeometry(90,64),new THREE.MeshStandardMaterial({color:0x18243b,roughness:.7}));sea.rotation.x=-Math.PI/2;sea.position.y=-.3;scene.add(sea);
-for(let i=0;i<35;i++){const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.5+((i*37)%7)/10),new THREE.MeshStandardMaterial({color:i%2?0x32465b:0x293c51}));const a=i*2.399;rock.position.set(Math.cos(a)*(21+(i%3)),.05,Math.sin(a)*(21+(i%3)));rock.scale.y=.5;scene.add(rock);}
-const game=createGame({seed:12,config:DEFAULT_CONFIG,scenario:{random_motes:true,random_shades:true}});
-const playerGroup=new THREE.Group();const body=new THREE.Mesh(new THREE.CapsuleGeometry(.42,.75,4,8),new THREE.MeshStandardMaterial({color:0xefd8b5}));body.position.y=.8;playerGroup.add(body);
-const hat=new THREE.Mesh(new THREE.ConeGeometry(.85,.45,8),new THREE.MeshStandardMaterial({color:0xb77543}));hat.position.y=1.45;hat.scale.set(1,.45,1);playerGroup.add(hat);
-const charm=new THREE.PointLight(0xffb95c,2,4);charm.position.set(.5,.65,0);playerGroup.add(charm);scene.add(playerGroup);
-const lanternMeshes=new Map(), moteMeshes=new Map(), shadeMeshes=new Map();
-for(const l of game.lanterns){const group=new THREE.Group();const pole=new THREE.Mesh(new THREE.CylinderGeometry(.12,.18,2.3,8),new THREE.MeshStandardMaterial({color:0x71503a}));pole.position.y=1.15;group.add(pole);const bulb=new THREE.Mesh(new THREE.OctahedronGeometry(.45),new THREE.MeshStandardMaterial({color:0x9b552e,emissive:0x30130a}));bulb.position.y=2.45;group.add(bulb);const light=new THREE.PointLight(0xffa746,0,10);light.position.y=2.4;group.add(light);group.position.set(l.pos[0],0,l.pos[2]);scene.add(group);lanternMeshes.set(l.id,{group,bulb,light});}
-function sync(){const s=snapshot(game);playerGroup.position.set(...game.player.pos);for(const [id,{group,bulb,light}]of lanternMeshes){const l=game.lanterns.find(x=>x.id===id);group.position.set(l.pos[0],0,l.pos[2]);light.intensity=l.lit?3.5:0;bulb.material.emissive.setHex(l.lit?0xff8a27:0x30130a);}
- for(const m of game.motes){if(!moteMeshes.has(m.id)){const mesh=new THREE.Mesh(new THREE.SphereGeometry(.18),new THREE.MeshStandardMaterial({color:0xffe49a,emissive:0xffb72e,emissiveIntensity:2}));scene.add(mesh);moteMeshes.set(m.id,mesh);}const mesh=moteMeshes.get(m.id);mesh.position.set(m.pos[0],.8+Math.sin(game.tick/10+m.pos[0])*.15,m.pos[2]);}
- for(const [id,mesh]of moteMeshes)if(!game.motes.some(m=>m.id===id)){scene.remove(mesh);moteMeshes.delete(id);}
- for(const shade of game.shades){if(!shadeMeshes.has(shade.id)){const mesh=new THREE.Mesh(new THREE.IcosahedronGeometry(.7),new THREE.MeshStandardMaterial({color:0x302044,emissive:0x170b29}));scene.add(mesh);shadeMeshes.set(shade.id,mesh);}const mesh=shadeMeshes.get(shade.id);mesh.position.set(shade.pos[0],.7,shade.pos[2]);mesh.material.color.setHex(shade.state==='stunned'?0xffc967:0x302044);}
- stats.textContent=`Đom đóm: ${game.player.carried}/${DEFAULT_CONFIG.carry_capacity} · Đèn: ${game.lanterns.filter(l=>l.lit).length}/5 · Lửa: ${game.player.flames} · Điểm: ${game.score} · ${Math.ceil(game.timeLeft)}s`;
- message.textContent=game.state==='won'?'Đảo đã sáng! Bạn thắng!':game.state==='lost'?'Đêm khép lại — nhấn R để chơi lại.':'';
- }
-const held=new Set();window.addEventListener('keydown',e=>{held.add(e.code);if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(e.code==='KeyR'&&game.state!=='playing')location.reload();});window.addEventListener('keyup',e=>held.delete(e.code));
-let lastInteract=false,lastPulse=false,lastJump=false,acc=0,last=performance.now();
-function animate(now){requestAnimationFrame(animate);acc+=Math.min(.1,(now-last)/1000);last=now;while(acc>=1/60&&game.state==='playing'){const input={move:[(held.has('KeyD')?1:0)-(held.has('KeyA')?1:0),(held.has('KeyS')?1:0)-(held.has('KeyW')?1:0)],cam_yaw_deg:0,interact:held.has('KeyE'),pulse:held.has('KeyF'),jump:held.has('Space')};stepGame(game,input);acc-=1/60;}const p=game.player.pos;camera.position.set(p[0]+8,p[1]+8,p[2]+11);camera.lookAt(p[0],p[1]+.7,p[2]);sync();renderer.render(scene,camera);}
-window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});requestAnimationFrame(animate);
+const ambient=new THREE.HemisphereLight(0xb9d5df,0x28483d,1.25);scene.add(ambient);
+const moon=new THREE.DirectionalLight(0xffedd2,2.3);moon.position.set(-18,25,19);moon.castShadow=true;moon.shadow.mapSize.set(1024,1024);moon.shadow.camera.left=-85;moon.shadow.camera.right=85;moon.shadow.camera.top=85;moon.shadow.camera.bottom=-85;moon.shadow.bias=-.0003;moon.shadow.radius=3;scene.add(moon);
+const sea=new THREE.Mesh(new THREE.CircleGeometry(150,64),new THREE.MeshStandardMaterial({color:'#205565',roughness:.78}));sea.rotation.x=-Math.PI/2;sea.position.y=-.4;scene.add(sea);
+const actor=createCharacter('player');
+const groundMarker=new THREE.Group(),markerDisc=new THREE.Mesh(new THREE.CircleGeometry(.83,32),new THREE.MeshBasicMaterial({color:'#071e25',transparent:true,opacity:.47,depthWrite:false}));markerDisc.rotation.x=-Math.PI/2;groundMarker.add(markerDisc);
+const markerRing=new THREE.Mesh(new THREE.RingGeometry(.72,.82,32),new THREE.MeshBasicMaterial({color:'#ffdb8c',transparent:true,opacity:.95,side:THREE.DoubleSide,depthWrite:false}));markerRing.rotation.x=-Math.PI/2;markerRing.position.y=.015;groundMarker.add(markerRing);
+const headingTip=new THREE.Mesh(new THREE.ConeGeometry(.19,.38,3),new THREE.MeshBasicMaterial({color:'#fff0c5',side:THREE.DoubleSide,depthWrite:false}));headingTip.rotation.x=Math.PI/2;headingTip.position.set(0,.035,1.04);groundMarker.add(headingTip);scene.add(groundMarker,actor);
+const entityMeshes={lanterns:new Map(),motes:new Map(),shades:new Map(),drifters:new Map(),charms:new Map()};
+let game=null,night=1,acc=0,last=performance.now(),fpsStart=performance.now(),frames=0,avgFps=0,settings=loadSettings(localStorage),audio=new AudioSystem(settings.volume),ui;
+const keys=new Set();let edges={jump:false,dash:false,pulse:false,interact:false,pause:false};
+let world=new THREE.Group();scene.add(world);
+function clearWorld(){clearCharacters(world,entityMeshes.shades,entityMeshes.drifters);scene.remove(world);world.traverse(o=>{o.geometry?.dispose();if(o.material&&!Array.isArray(o.material))o.material.dispose();});world=new THREE.Group();scene.add(world);for(const m of Object.values(entityMeshes))m.clear();}
+function startNight(n){night=n;clearWorld();game=null;createMap(MAPS[n]);ui.showIntro(n,()=>{game=createGame({seed:12,night:n,config:DEFAULT_CONFIG});ui.showGame();audio.start();});}
+function createMap(map){
+ for(const island of map.islands){const geometry=new THREE.CircleGeometry(island.radius,96),colors=[];const inner=new THREE.Color('#547d62'),outer=new THREE.Color('#284f49'),positions=geometry.getAttribute('position');for(let i=0;i<positions.count;i++){const r=Math.hypot(positions.getX(i),positions.getY(i))/island.radius,c=inner.clone().lerp(outer,Math.min(1,r*.85));colors.push(c.r,c.g,c.b);}geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));const shape=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.92,side:THREE.DoubleSide}));shape.rotation.x=-Math.PI/2;shape.position.set(...island.center);shape.receiveShadow=true;world.add(shape);const shore=new THREE.Mesh(new THREE.RingGeometry(island.radius-.6,island.radius+.3,96),new THREE.MeshStandardMaterial({color:'#839782',roughness:1,side:THREE.DoubleSide}));shore.rotation.x=-Math.PI/2;shore.position.set(island.center[0],.025,island.center[2]);world.add(shore);}
+ if(map.bridge){const b=new THREE.Mesh(new THREE.BoxGeometry(map.bridge.x[1]-map.bridge.x[0],.5,map.bridge.z[1]-map.bridge.z[0]),new THREE.MeshStandardMaterial({color:'#9d7750',roughness:.86}));b.position.set(35,-.05,0);b.receiveShadow=true;world.add(b);}
+ if(night===3){for(const tier of map.tiers){const mesh=new THREE.Mesh(new THREE.RingGeometry(tier.inner??0,tier.outer??tier.radius,64),new THREE.MeshStandardMaterial({color:tier.y===3?'#adab87':'#4e7760',side:THREE.DoubleSide}));mesh.rotation.x=-Math.PI/2;mesh.position.y=tier.y;mesh.receiveShadow=true;world.add(mesh);}const tower=new THREE.Mesh(new THREE.CylinderGeometry(2,2,8,16),new THREE.MeshStandardMaterial({color:'#9d7750'}));tower.position.y=10;tower.castShadow=true;world.add(tower);}
+ if(night===2)for(const pad of map.pads){const mesh=new THREE.Mesh(new THREE.CylinderGeometry(1,1,.3,20),new THREE.MeshStandardMaterial({color:'#F2C14E',emissive:'#F2C14E',emissiveIntensity:.7}));mesh.position.set(pad.pos[0],.15,pad.pos[2]);world.add(mesh);}
+ for(const l of map.lanterns){const group=new THREE.Group(),pole=new THREE.Mesh(new THREE.CylinderGeometry(.12,.18,2.3,8),new THREE.MeshStandardMaterial({color:'#a0784c'}));pole.position.y=1.15;pole.castShadow=true;group.add(pole);const bulb=new THREE.Mesh(new THREE.SphereGeometry(.42,12,12),new THREE.MeshStandardMaterial({color:'#bfc8ba',emissive:'#000000'}));bulb.position.y=2.4;bulb.castShadow=true;group.add(bulb);const point=new THREE.PointLight('#FFB347',0,12);point.position.y=2.4;group.add(point);group.position.set(...l.pos);world.add(group);entityMeshes.lanterns.set(l.id,{group,bulb,point});}
+}
+function sync(){if(!game)return;const s=snapshot(game),p=game.player;actor.position.set(...p.pos);actor.rotation.y=facingYaw(p.facing);groundMarker.position.set(p.pos[0],Math.max(0,p.pos[1])+.05,p.pos[2]);groundMarker.rotation.y=actor.rotation.y;for(const [id,{group,bulb,point}]of entityMeshes.lanterns){const l=game.lanterns.find(x=>x.id===id);bulb.material.emissive.set(l.lit?'#FFB347':'#000000');point.intensity=l.lit?2.8:0;}ambient.intensity=1.15+.15*game.lanterns.filter(l=>l.lit).length/game.lanterns.length;
+ for(const m of game.motes){if(!entityMeshes.motes.has(m.id)){const o=new THREE.Mesh(new THREE.SphereGeometry(.17),new THREE.MeshStandardMaterial({color:'#FFF6C2',emissive:'#FFE58A',emissiveIntensity:2}));world.add(o);entityMeshes.motes.set(m.id,o);}entityMeshes.motes.get(m.id).position.set(...m.pos);}
+ for(const [id,o]of entityMeshes.motes)if(!game.motes.some(m=>m.id===id)){world.remove(o);o.geometry.dispose();o.material.dispose();entityMeshes.motes.delete(id);}
+  syncCharacters(world,entityMeshes.shades,game.shades,'shade');
+  syncCharacters(world,entityMeshes.drifters,game.drifters.filter(d=>d.state!=='removed'),'drifter');
+ ui.update(s,game);}
+function inputForTick(){const held={jump:keys.has('Space'),dash:keys.has('ShiftLeft')||keys.has('ShiftRight'),pulse:keys.has('KeyF'),interact:keys.has('KeyE'),pause:keys.has('Escape')||keys.has('KeyP'),move:[(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0),(keys.has('KeyS')?1:0)-(keys.has('KeyW')?1:0)],cam_yaw_deg:0};const next={...held};for(const k of ['jump','dash','pulse','interact','pause'])next[k]=held[k]&&!edges[k];edges={jump:held.jump,dash:held.dash,pulse:held.pulse,interact:held.interact,pause:held.pause};return next;}
+ui=createUI({onStart:()=>startNight(1),onReplay:()=>startNight(night),onContinue:()=>{resumePausedGame(game);ui.showGame();},onSettings:()=>ui.showSettings(settings,updated=>{settings=updated;saveSettings(localStorage,settings);audio.setVolume(settings.volume);}),onMenu:()=>ui.showMenu(),onNext:()=>startNight(night+1)});
+window.addEventListener('keydown',e=>{keys.add(e.code);if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(game&&['Escape','KeyP'].includes(e.code)){if(!game.paused)ui.showPause();}});window.addEventListener('keyup',e=>keys.delete(e.code));
+function animate(now){requestAnimationFrame(animate);const elapsed=Math.min(.1,(now-last)/1000);last=now;acc+=elapsed;while(acc>=1/60&&game&&(game.state==='playing'||game.paused)){const events=stepGame(game,inputForTick());for(const ev of events)audio.handle(ev);acc-=1/60;if(game.state!=='playing')ui.showResult(game,night);}frames++;if(now-fpsStart>=1000){avgFps=frames*1000/(now-fpsStart);frames=0;fpsStart=now;ui.setFps(avgFps);}const p=game?.player.pos??[0,0,0];camera.position.set(p[0]+8,p[1]+9,p[2]+12);camera.lookAt(p[0],p[1]+.7,p[2]);sync();renderer.render(scene,camera);}
+window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});ui.showMenu();requestAnimationFrame(animate);
